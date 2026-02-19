@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Almuerzo</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<!-- =======================================================
+     🧱 BLOQUE B — INTERFAZ HUMANA
+     Solo renderiza y emite callbacks
+     B NO conoce el contexto (modo)
+     ======================================================= -->
+
+<div class="header">
+    <div class="logo">🍽️ Pedido de Almuerzo</div>
+    <div class="tagline">Armá tu pedido y envialo por WhatsApp</div>
+    
+    <div id="indicadorContexto" class="indicador-contexto estado-inactivo">
+        <span id="textoContexto">Cargando...</span>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <h3>📋 Menú de hoy</h3>
+    <div id="opcionesContainer" class="opciones-grid">
+        <!-- B renderiza desde datos que G le pasa -->
+    </div>
+</div>
+
+<div class="tarjeta">
+    <h3>➕ Extras</h3>
+    <div id="extrasContainer" class="extras-grid">
+        <!-- B renderiza desde datos que G le pasa -->
+    </div>
+</div>
+
+<div class="tarjeta">
+    <h3>📦 Tu pedido</h3>
+    <div id="resumenContenido" class="resumen-contenido">
+        <div class="resumen-vacio">Nada seleccionado</div>
+    </div>
+    
+    <div id="infoDespacho" class="info-despacho" style="display:none;">
+        🚚 Despacho: <span id="textoDespacho">--:--</span>
+    </div>
+    
+    <div id="infoPuntos" class="info-puntos" style="display:none;">
+        ⭐ Puntos: <span id="textoPuntos">0</span>
+    </div>
+</div>
+
+<button id="btnEnviar" class="btn-principal" disabled>
+    📱 Enviar pedido por WhatsApp
+</button>
+
+<button id="btnLimpiar" class="btn-secundario" style="display:none;">
+    🗑️ Limpiar pedido
+</button>
+
+<!-- Mensaje de confirmación -->
+<div id="mensajeConfirmacion" class="mensaje-confirmacion" style="display:none;">
+    ✅ Pedido preparado. Si no se abrió WhatsApp, revisa los permisos de tu navegador.
+</div>
+
+<a href="#" id="linkAdmin" class="admin-link">👤 Configurar sistema</a>
+
+<!-- Modal de configuración -->
+<div id="modalAdmin" class="modal">
+    <div class="modal-contenido">
+        <h3>🔧 Configuración</h3>
+        <p>Configuración local (se guarda en tu navegador)</p>
+        
+        <label>Número WhatsApp:</label>
+        <input type="text" id="inputWhatsApp" placeholder="593XXXXXXXXX">
+        
+        <div class="modal-botones">
+            <button id="btnGuardar" class="btn-modal btn-guardar">💾 Guardar</button>
+            <button id="btnCerrar" class="btn-modal btn-cerrar">✕ Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Datos del menú (editable por operador) -->
+<script src="menu.js"></script>
+
+<!-- Sistema (Bloques C, D, E, F, G) -->
+<script src="sistema.js"></script>
+
+<!-- =======================================================
+     🧱 BLOQUE B — LÓGICA DE INTERFAZ
+     B recibe callbacks de G, nunca muta estado
+     B NO conoce QR, reglas, ni contexto
+     ======================================================= -->
+<script>
+/* =========================
+   ESTADO LOCAL DE B (UI)
+   B NO mantiene estado de negocio
+========================= */
+
+let callbacksInyectados = {};
+let menuLocal = null;
+
+/* =========================
+   INICIALIZACIÓN DE B
+========================= */
+
+function inicializarUI(callbacks, menu) {
+    console.log('🎨 Inicializando UI (Bloque B)');
+    
+    // B recibe callbacks de G (inyección de dependencias)
+    callbacksInyectados = callbacks;
+    menuLocal = menu;
+    
+    // Renderizar opciones
+    renderizarOpciones();
+    renderizarExtras();
+    
+    // Eventos de UI
+    configurarEventos();
+}
+
+/* =========================
+   RENDERIZADO (B solo muestra)
+========================= */
+
+function renderizarOpciones() {
+    const container = document.getElementById('opcionesContainer');
+    container.innerHTML = '';
+    
+    Object.values(menuLocal.opciones).forEach(opcion => {
+        const card = document.createElement('div');
+        card.className = 'opcion-card';
+        card.dataset.opcionId = opcion.id;
+        
+        // Modelo multi-base: siempre mostrar controles de cantidad
+        // detalleHoy: plato específico del día (extensión semántica)
+        const detalleHtml = opcion.detalleHoy 
+            ? `<div class="opcion-detalle">${opcion.detalleHoy}</div>` 
+            : '';
+        
+        card.innerHTML = `
+            <div class="opcion-header">
+                <span class="opcion-emoji">${opcion.emoji}</span>
+                <span>${opcion.nombre}</span>
+            </div>
+            ${detalleHtml}
+            <div class="opcion-descripcion">${opcion.descripcion}</div>
+            <div class="cantidad-control">
+                <button class="btn-cantidad" data-accion="restar" data-id="${opcion.id}">−</button>
+                <span class="cantidad-display" data-id="${opcion.id}">0</span>
+                <button class="btn-cantidad" data-accion="sumar" data-id="${opcion.id}">+</button>
+            </div>
+        `;
+        
+        // Eventos de cantidad - B emite callbacks a G
+        const btnRestar = card.querySelector('[data-accion="restar"]');
+        const btnSumar = card.querySelector('[data-accion="sumar"]');
+        
+        btnRestar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            callbacksInyectados.onAjustarBase(opcion.id, -1);
+        });
+        
+        btnSumar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            callbacksInyectados.onAjustarBase(opcion.id, 1);
+        });
+        
+        container.appendChild(card);
+    });
+}
+
+function renderizarExtras() {
+    const container = document.getElementById('extrasContainer');
+    container.innerHTML = '';
+    
+    Object.values(menuLocal.extras).forEach(extra => {
+        const card = document.createElement('div');
+        card.className = 'extra-card';
+        card.dataset.extraId = extra.id;
+        
+        card.innerHTML = `
+            <span class="extra-emoji">${extra.emoji}</span>
+            <div>${extra.nombre}</div>
+        `;
+        
+        // B emite evento
+        card.addEventListener('click', () => {
+            callbacksInyectados.onExtra(extra.id);
+        });
+        
+        container.appendChild(card);
+    });
+}
+
+/* =========================
+   ACTUALIZACIÓN DE UI
+   B renderiza lo que G le dice
+========================= */
+
+function actualizarUI(datos) {
+    const { pedido, evaluacion, tiempo, menu } = datos;
+    
+    // 1. Actualizar indicador de contexto
+    actualizarIndicadorContexto(evaluacion.estadoMercado);
+    
+    // 2. Actualizar selección de opciones
+    actualizarSeleccionOpciones(pedido);
+    
+    // 3. Actualizar selección de extras
+    actualizarSeleccionExtras(pedido);
+    
+    // 4. Actualizar resumen
+    actualizarResumen(pedido, menu);
+    
+    // 5. Actualizar info de despacho
+    actualizarInfoDespacho(evaluacion);
+    
+    // 6. Actualizar info de puntos
+    actualizarInfoPuntos(evaluacion);
+    
+    // 7. Controlar botón de envío
+    controlarBotonEnvio(pedido, evaluacion);
+}
+
+function actualizarIndicadorContexto(estadoMercado) {
+    const indicador = document.getElementById('indicadorContexto');
+    const texto = document.getElementById('textoContexto');
+    
+    // G traduce dominio → sensación (vocabulario emocional de A)
+    const mapaSensorial = {
+        'ABIERTO_TEMPRANO': { clase: 'estado-primario', texto: 'Mercado abierto · Temprano' },
+        'ABIERTO_NORMAL': { clase: 'estado-primario', texto: 'Mercado abierto' },
+        'ABIERTO_TARDIO': { clase: 'estado-advertencia', texto: 'Mercado abierto · Tardío' },
+        'CERRADO': { clase: 'estado-inactivo', texto: 'Mercado cerrado' }
+    };
+    
+    const config = mapaSensorial[estadoMercado] || mapaSensorial.CERRADO;
+    
+    indicador.className = `indicador-contexto ${config.clase}`;
+    texto.textContent = config.texto;
+}
+
+function actualizarSeleccionOpciones(pedido) {
+    document.querySelectorAll('.opcion-card').forEach(card => {
+        const id = card.dataset.opcionId;
+        // Modelo multi-base: buscar cantidad en pedido.bases
+        const cantidad = Pedido.getCantidadBase(pedido, id);
+        const tieneSeleccion = cantidad > 0;
+        
+        card.classList.toggle('seleccionada', tieneSeleccion);
+        
+        const displayCantidad = card.querySelector('.cantidad-display');
+        if (displayCantidad) {
+            displayCantidad.textContent = cantidad;
+        }
+    });
+}
+
+function actualizarSeleccionExtras(pedido) {
+    document.querySelectorAll('.extra-card').forEach(card => {
+        const id = card.dataset.extraId;
+        const esSeleccionado = pedido.extras.includes(id);
+        card.classList.toggle('seleccionado', esSeleccionado);
+    });
+}
+
+function actualizarResumen(pedido, menu) {
+    const container = document.getElementById('resumenContenido');
+    
+    // Modelo multi-base: verificar si hay bases seleccionadas
+    if (pedido.bases.length === 0) {
+        container.innerHTML = '<div class="resumen-vacio">Nada seleccionado</div>';
+        return;
+    }
+    
+    let html = '';
+    
+    // Iterar sobre todas las bases seleccionadas (incluir detalleHoy)
+    pedido.bases.forEach(base => {
+        const opcion = menu.opciones[base.id];
+        const detalle = opcion.detalleHoy ? ` — ${opcion.detalleHoy}` : '';
+        html += `<div class="resumen-item">${base.cantidad} × ${opcion.emoji} ${opcion.nombre}${detalle}</div>`;
+    });
+    
+    // Agregar extras si hay
+    if (pedido.extras.length > 0) {
+        pedido.extras.forEach(extraId => {
+            const extra = menu.extras[extraId];
+            html += `<div class="resumen-item">+ ${extra.emoji} ${extra.nombre}</div>`;
+        });
+    }
+    
+    container.innerHTML = html;
+}
+
+function actualizarInfoDespacho(evaluacion) {
+    const container = document.getElementById('infoDespacho');
+    const texto = document.getElementById('textoDespacho');
+    
+    if (evaluacion.despachoAsignado) {
+        container.style.display = 'block';
+        texto.textContent = evaluacion.despachoAsignado;
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function actualizarInfoPuntos(evaluacion) {
+    const container = document.getElementById('infoPuntos');
+    const texto = document.getElementById('textoPuntos');
+    
+    // Puntos son informativos, NO persuasivos
+    if (evaluacion.puntos > 0) {
+        container.style.display = 'block';
+        texto.textContent = evaluacion.puntos;
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function controlarBotonEnvio(pedido, evaluacion) {
+    const btn = document.getElementById('btnEnviar');
+    const btnLimpiar = document.getElementById('btnLimpiar');
+    
+    // Habilitar si hay pedido (E maneja ejecutabilidad, no B)
+    const hayPedido = !Pedido.estaVacio(pedido);
+    btn.disabled = !hayPedido;
+    
+    // Mostrar botón limpiar solo si hay pedido
+    if (btnLimpiar) {
+        btnLimpiar.style.display = hayPedido ? 'block' : 'none';
+    }
+}
+
+/* =========================
+   EVENTOS DE UI
+========================= */
+
+function configurarEventos() {
+    // Botón de envío
+    document.getElementById('btnEnviar').addEventListener('click', () => {
+        callbacksInyectados.onEnviar();
+    });
+    
+    // Botón de limpiar
+    const btnLimpiar = document.getElementById('btnLimpiar');
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', () => {
+            if (confirm('¿Limpiar el pedido actual?')) {
+                callbacksInyectados.onReset();
+            }
+        });
+    }
+    
+    // Modal de admin
+    const linkAdmin = document.getElementById('linkAdmin');
+    const modal = document.getElementById('modalAdmin');
+    const btnCerrar = document.getElementById('btnCerrar');
+    const btnGuardar = document.getElementById('btnGuardar');
+    const inputWhatsApp = document.getElementById('inputWhatsApp');
+    
+    linkAdmin.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.classList.add('visible');
+        inputWhatsApp.value = Sistema.whatsappNumber;
+    });
+    
+    btnCerrar.addEventListener('click', () => {
+        modal.classList.remove('visible');
+    });
+    
+    btnGuardar.addEventListener('click', () => {
+        const numero = inputWhatsApp.value.trim();
+        if (numero) {
+            Sistema.guardarConfiguracion(numero);
+            modal.classList.remove('visible');
+            alert('✅ Configuración guardada');
+        }
+    });
+    
+    // Cerrar modal al hacer click fuera
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('visible');
+        }
+    });
+}
+
+/* =========================
+   CONFIRMACIÓN VISUAL
+========================= */
+
+function mostrarMensajeConfirmacion() {
+    const mensaje = document.getElementById('mensajeConfirmacion');
+    if (mensaje) {
+        mensaje.style.display = 'block';
+        setTimeout(() => {
+            mensaje.style.display = 'none';
+        }, 5000);
+    }
+}
+
+/* =========================
+   ARRANQUE DEL SISTEMA
+========================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📱 Aplicación cargada');
+    Sistema.iniciar();
+});
+</script>
+
+</body>
+</html>
