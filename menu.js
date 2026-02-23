@@ -11,49 +11,50 @@ const MENU_DATA = {
         "SOLO_SOPA": {
             "id": "SOLO_SOPA",
             "nombre": "Sopa del día",
-            "emoji": "🥣",
+            "emoji": "🥘",
             "descripcion": "Solo sopa caliente",
-            "detalleHoy": "Crema de zapallo"
+            "detalleHoy": "Sancocho de pez Bagre"
         },
         "A": {
             "id": "A",
             "nombre": "Almuerzo A",
-            "emoji": "🍱",
+            "emoji": "🍛🍲",
             "descripcion": "Sopa + Segundo A",
-            "detalleHoy": "Pollo guisado con arroz"
+            "detalleHoy": "Moro de lenteja con chuleta"
         },
         "B": {
             "id": "B",
             "nombre": "Almuerzo B",
-            "emoji": "🍛",
+            "emoji": "🍛🍲",
             "descripcion": "Sopa + Segundo B",
-            "detalleHoy": "Seco de carne"
+            "detalleHoy": "Menestra con carne apanada"
         },
         "SEGUNDO_A": {
             "id": "SEGUNDO_A",
             "nombre": "Segundo A",
-            "emoji": "🍗",
+            "emoji": "🥩",
             "descripcion": "Solo segundo (sin sopa)",
-            "detalleHoy": "Pollo guisado con arroz"
+            "detalleHoy": "Moro de lenteja con chuleta"
         },
         "SEGUNDO_B": {
             "id": "SEGUNDO_B",
             "nombre": "Segundo B",
             "emoji": "🥩",
             "descripcion": "Solo segundo (sin sopa)",
-            "detalleHoy": "Seco de carne"
+            "detalleHoy": "Menestra con carne apanada"
         }
     },
     "extras": {
         "JUGO": {
             "id": "JUGO",
-            "nombre": "Jugo natural",
+            "nombre": "Jugo",
             "emoji": "🧃"
         },
         "POSTRE": {
             "id": "POSTRE",
-            "nombre": "Postre del día",
+            "nombre": "Postre",
             "emoji": "🍰"
         }
     }
 };
+
