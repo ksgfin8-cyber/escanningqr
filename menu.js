@@ -41,7 +41,7 @@ const MENU_DATA = {
             "nombre": "Segundo B",
             "emoji": "🍗",
             "descripcion": "Solo segundo (sin sopa)",
-            "detalleHoy":  "Menestra con Pollo Borster"
+            "detalleHoy":  "Menestra con Pollo Broster"
         }
     },
     "extras": {
@@ -57,6 +57,7 @@ const MENU_DATA = {
         }
     }
 };
+
 
 
 
