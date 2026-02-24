@@ -13,35 +13,35 @@ const MENU_DATA = {
             "nombre": "Sopa del día",
             "emoji": "🥘",
             "descripcion": "Solo sopa caliente",
-            "detalleHoy": "Sancocho de pez Bagre"
+            "detalleHoy": "Menestron de res"
         },
         "A": {
             "id": "A",
             "nombre": "Almuerzo A",
             "emoji": "🍛🥘",
             "descripcion": "Sopa + Segundo A",
-            "detalleHoy": "Moro de lenteja con chuleta"
+            "detalleHoy": "Tortilla de camaron"
         },
         "B": {
             "id": "B",
             "nombre": "Almuerzo B",
             "emoji": "🍛🥘",
             "descripcion": "Sopa + Segundo B",
-            "detalleHoy": "Menestra con carne apanada"
+            "detalleHoy": "Menestra con Pollo Borster"
         },
         "SEGUNDO_A": {
             "id": "SEGUNDO_A",
             "nombre": "Segundo A",
-            "emoji": "🥩",
+            "emoji": "🍤",
             "descripcion": "Solo segundo (sin sopa)",
-            "detalleHoy": "Moro de lenteja con chuleta"
+            "detalleHoy": "Tortilla de camaron"
         },
         "SEGUNDO_B": {
             "id": "SEGUNDO_B",
             "nombre": "Segundo B",
-            "emoji": "🥩",
+            "emoji": "🍗",
             "descripcion": "Solo segundo (sin sopa)",
-            "detalleHoy": "Menestra con carne apanada"
+            "detalleHoy":  "Menestra con Pollo Borster"
         }
     },
     "extras": {
@@ -57,5 +57,7 @@ const MENU_DATA = {
         }
     }
 };
+
+
 
 
